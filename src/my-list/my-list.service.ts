@@ -23,8 +23,16 @@ export class MyListService {
   ): Promise<boolean> {
     debugger;
     try {
+      // Checking if User Exists
+      const user = await this.userModel.exists({ _id: userId }).lean();
+      if (!user) {
+        throw new Error('User Not Found');
+      }
+
+      // Fetching List of User
       const myList = await this.myListModel.findOne({ userId });
 
+      // Creating a new List if no list found
       if (!myList) {
         const newList = new this.myListModel({
           userId,
@@ -33,6 +41,7 @@ export class MyListService {
         await newList.save();
       }
 
+      // Check if content already exist in the current user list
       const exists = myList.items.some(
         (item) =>
           item.itemId.toString() === itemId && item.itemType === itemType,
@@ -44,12 +53,13 @@ export class MyListService {
           itemType,
         };
 
+        // Adding Content to user list
         await this.myListModel.updateOne(
           { userId },
           { $push: { items: newItem } },
         );
       }
-      return true
+      return true;
     } catch (error) {
       console.error(error.message);
       return false;
@@ -58,12 +68,20 @@ export class MyListService {
 
   async removeFromMyList(userId: string, itemId: string): Promise<boolean> {
     try {
+      // Checking if User Exists
+      const user = await this.userModel.exists({ _id: userId }).lean();
+      if (!user) {
+        throw new Error('User Not Found');
+      }
+
+      // Fetching List of User
       const myList = await this.myListModel.findOne({ userId });
 
       if (!myList) {
         throw new NotFoundException('List not found');
       }
 
+      // filtering out all content except one which user wants to delete
       myList.items = myList.items.filter(
         (item) => item.itemId.toString() !== itemId,
       );
@@ -82,14 +100,18 @@ export class MyListService {
     limit: number,
   ): Promise<MyList> {
     try {
+      // Fetching User List with pagination
       const myList = await this.myListModel
         .findOne({ userId })
         .populate('items.itemId', 'title description')
         .skip((page - 1) * limit)
-        .limit(limit);
+        .limit(limit)
+        .lean();
+
       if (!myList) {
         throw new NotFoundException('List not found');
       }
+      
       return myList;
     } catch (error) {
       return null;
