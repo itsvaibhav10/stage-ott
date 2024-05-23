@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { MyListService } from './my-list.service';
-import { ContentType } from 'src/common/enums/commonEnums';
-import { createResponse } from 'src/util/response';
+import { ContentType } from '../common/enums/commonEnums';
+import { createResponse } from '../util/response';
 
 @Controller('mylist')
 export class MyListController {
